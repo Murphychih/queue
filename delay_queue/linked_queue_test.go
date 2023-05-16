@@ -315,7 +315,7 @@ func BenchmarkQueue(b *testing.B) {
 	var wg sync.WaitGroup
 	b.ReportAllocs()
 	b.ResetTimer()
-	runtime.GOMAXPROCS(16) // 控制 goroutine 的数量
+	runtime.GOMAXPROCS(16) // 控制 P 的数量
 	wg.Add(2 * benchmarkTimes)
 	for i := 0; i < benchmarkTimes; i++ {
 		val := i // 使用固定的元素值
@@ -335,7 +335,7 @@ func BenchmarkQueue(b *testing.B) {
 	wg.Wait()
 	b.StopTimer()
 	b.ReportAllocs() // 在 b.ResetTimer() 后使用 b.ReportAllocs()
-	fmt.Printf("miss的次数 %v \n", q.miss)
+	fmt.Printf("miss的次数 Enqueue:%v, Dequeue:%v \n", q.missEnqueue, q.missDnqueue)
 }
 
 func BenchmarkQueueWithPool(b *testing.B) {
@@ -346,7 +346,7 @@ func BenchmarkQueueWithPool(b *testing.B) {
 	p := gopool.NewPool("benchmark", int32(runtime.GOMAXPROCS(0)), config)
 	b.ReportAllocs()
 	b.ResetTimer()
-	runtime.GOMAXPROCS(16) // 控制 goroutine 的数量
+	runtime.GOMAXPROCS(16) // 控制 P 的数量
 	wg.Add(2 * benchmarkTimes)
 	for i := 0; i < benchmarkTimes; i++ {
 		val := i // 使用固定的元素值
@@ -366,7 +366,7 @@ func BenchmarkQueueWithPool(b *testing.B) {
 	wg.Wait()
 	b.StopTimer()
 	b.ReportAllocs() // 在 b.ResetTimer() 后使用 b.ReportAllocs()
-	fmt.Printf("miss的次数 %v \n", q.miss)
+	fmt.Printf("miss的次数 Enqueue:%v, Dequeue:%v \n", q.missEnqueue, q.missDnqueue)
 }
 
 func BenchmarkQueueV1(b *testing.B) {
