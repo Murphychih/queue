@@ -1,7 +1,6 @@
 package delay_queue
 
 import (
-	"fmt"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -52,7 +51,6 @@ func (c *ConcurrentLinkedQueue[T]) Enqueue(t T) error {
 		tailNext := atomic.LoadPointer(&tail.next)
 		if tailNext != nil {
 			// 已经被人修改了，不需要修复，因为预期中修改的那个人会把 c.tail 指过去
-			//atomic.AddInt64(&newNode.wait, 1)
 			continue
 		}
 		if atomic.CompareAndSwapPointer(&tail.next, tailNext, newPtr) {
@@ -73,7 +71,7 @@ func (c *ConcurrentLinkedQueue[T]) EnqueueV1(t T) error {
 	defer c.lock.Unlock()
 	newNode := &node[T]{val: t}
 	newPtr := unsafe.Pointer(newNode)
-	fmt.Println((*node[T])(newPtr).val)
+	// fmt.Println((*node[T])(newPtr).val)
 	tailPtr := atomic.LoadPointer(&c.tail)
 	tail := (*node[T])(tailPtr)
 	tailNext := atomic.LoadPointer(&tail.next)

@@ -247,7 +247,6 @@ func TestConcurrentQueue_DequeueV1(t *testing.T) {
 func TestConcurrentLinkedQueue(t *testing.T) {
 	t.Parallel()
 	// 仅仅是为了测试在入队出队期间不会出现 panic 或者死循环之类的问题
-	// FIFO 特性参考其余测试
 	q := NewConcurrentLinkedQueue[int]()
 	var wg sync.WaitGroup
 	wg.Add(10000)
@@ -280,7 +279,6 @@ func TestConcurrentLinkedQueue(t *testing.T) {
 func TestConcurrentLinkedQueueV1(t *testing.T) {
 	t.Parallel()
 	// 仅仅是为了测试在入队出队期间不会出现 panic 或者死循环之类的问题
-	// FIFO 特性参考其余测试
 	q := NewConcurrentLinkedQueue[int]()
 	var wg sync.WaitGroup
 	wg.Add(10000)
