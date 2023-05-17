@@ -2,14 +2,16 @@ package delay_queue
 
 import (
 	"fmt"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"math/rand"
 	"queue/gopool"
 	"runtime"
 	"sync"
 	"sync/atomic"
 	"testing"
+	"time"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 const benchmarkTimes = 10000
@@ -326,6 +328,8 @@ func BenchmarkQueue(b *testing.B) {
 		go func() {
 			for j := 0; j < b.N; j++ {
 				_, _ = q.Dequeue()
+				// 模拟爬虫逻辑
+				time.Sleep(500 * time.Microsecond)
 			}
 			wg.Done()
 		}()
@@ -357,6 +361,8 @@ func BenchmarkQueueWithPool(b *testing.B) {
 		p.Go(func() {
 			for j := 0; j < b.N; j++ {
 				_, _ = q.Dequeue()
+				// 模拟爬虫逻辑
+				time.Sleep(500 * time.Microsecond)
 			}
 			wg.Done()
 		})
@@ -367,6 +373,7 @@ func BenchmarkQueueWithPool(b *testing.B) {
 	fmt.Printf("miss的次数 Enqueue:%v, Dequeue:%v \n", q.missEnqueue, q.missDnqueue)
 }
 
+// 这是最快的
 func BenchmarkQueueV1(b *testing.B) {
 	q := NewConcurrentLinkedQueue[int]()
 	var wg sync.WaitGroup
@@ -385,9 +392,43 @@ func BenchmarkQueueV1(b *testing.B) {
 		go func() {
 			for j := 0; j < b.N; j++ {
 				_, _ = q.DequeueV1()
+				// 模拟爬虫逻辑
+				time.Sleep(500 * time.Microsecond)
 			}
 			wg.Done()
 		}()
+	}
+	wg.Wait()
+	b.StopTimer()
+	b.ReportAllocs() // 在 b.ResetTimer() 后使用 b.ReportAllocs()
+}
+
+func BenchmarkQueueV1WithPool(b *testing.B) {
+	q := NewConcurrentLinkedQueue[int]()
+	config := gopool.NewConfig()
+	config.ScaleThreshold = 1
+	p := gopool.NewPool("benchmark", int32(runtime.GOMAXPROCS(0)), config)
+	var wg sync.WaitGroup
+	b.ReportAllocs()
+	b.ResetTimer()
+	runtime.GOMAXPROCS(16) // 控制 goroutine 的数量
+	wg.Add(2 * benchmarkTimes)
+	for i := 0; i < benchmarkTimes; i++ {
+		val := i // 使用固定的元素值
+		p.Go(func() {
+			for j := 0; j < b.N; j++ {
+				_ = q.EnqueueV1(val)
+			}
+			wg.Done()
+		})
+		p.Go(func() {
+			for j := 0; j < b.N; j++ {
+				_, _ = q.DequeueV1()
+				// 模拟爬虫逻辑
+				time.Sleep(500 * time.Microsecond)
+			}
+			wg.Done()
+		})
 	}
 	wg.Wait()
 	b.StopTimer()
